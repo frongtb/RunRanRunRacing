@@ -6,7 +6,9 @@
 #include<SFML/System.hpp>
 #include<SFML/Window.hpp>
 
+
 #include"Menu.h"
+#include"pauseMenu.h"
 
 #include<map>
 #include<time.h>
@@ -14,7 +16,7 @@
 #include <sstream>
 #include <vector>
 using namespace sf;
-
+sf::Text distance;
 sf::RectangleShape playerOILBar;
 sf::RectangleShape playerOILBarBack;
 sf::RectangleShape playerHpBar;
@@ -26,6 +28,7 @@ int segL = 200; //segment length
 float camD = 0.84; //camera depth
 
 bool isGameStarted ;
+bool ispaused;
 void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, int w2)
 {
     ConvexShape shape(4);
@@ -36,6 +39,7 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
     shape.setPoint(3, Vector2f(x1 + w1, y1));
     w.draw(shape);
 }
+
 
 struct Line
 {
@@ -91,8 +95,8 @@ int main()
     //menu
     Menu menu(app.getSize().x,app.getSize().y);
 
-
-
+    //pause
+    pauseMenu pausemenu(app.getSize().x / 4, app.getSize().y / 4);
 
    
 
@@ -108,6 +112,13 @@ int main()
     if (!font.loadFromFile("Fonts/Cascadia.ttf"))
         std::cout << "game failed to load font" << "\n";
 
+    
+
+    distance.setFont(font);
+    distance.setCharacterSize(18);
+    distance.setFillColor(sf::Color::Black);
+    distance.setString("X");
+    distance.setPosition(25.f, 25.f);
 
     mark.setFont(font);
     mark.setCharacterSize(18);
@@ -115,6 +126,7 @@ int main()
     mark.setString("X");
     mark.setPosition(app.getSize().x / 2.f - mark.getGlobalBounds().width / 2.f, app.getSize().y / 2.f - mark.getGlobalBounds().height / 2.f);
 
+  
     Texture t[50];
     Sprite object[50];
     for (int i = 1; i <= 7; i++)
@@ -140,23 +152,24 @@ int main()
 
         if (i > 300 && i < 700) line.curve = 0.5;
         if (i > 1100) line.curve = -0.7;
-
-        if (i < 300 && i % 20 == 0) { line.spriteX = -2.5; line.sprite = object[5]; }
+        //object
+        if (i < 300 && i % 20 == 0) { line.spriteX = -1.7; line.sprite = object[5]; }
         if (i % 17 == 0) { line.spriteX = 2.0; line.sprite = object[6]; }
-        if (i > 300 && i % 20 == 0) { line.spriteX = -0.7; line.sprite = object[4]; }
+        if (i % 50 == 0) { line.spriteX = 2.0; line.sprite = object[1]; }
+        if (i > 300 && i % 20 == 0) { line.spriteX = -1.4; line.sprite = object[2]; }
         if (i > 800 && i % 20 == 0) { line.spriteX = -1.2; line.sprite = object[1]; }
-        if (i == 400) { line.spriteX = -1.2; line.sprite = object[7]; }
+        if (i == 400) { line.spriteX = -1.3; line.sprite = object[7]; }
 
         if (i > 750) line.y = sin(i / 30.0) * 1500;
 
         lines.push_back(line);
     }
-
+    int distanceScore = 0;
     int N = lines.size();
     float playerX = 0;
     int pos = 0;
     int H = 1500;
-    int oil_MAX = 5000;
+    int oil_MAX = 5100;
     int oil;
     oil = oil_MAX;
     int hpMax = 100;
@@ -177,9 +190,14 @@ int main()
 
     playerHpBarBack = playerHpBar;
     playerHpBarBack.setFillColor(sf::Color(25, 25, 25, 200));
+
+    
     while (app.isOpen())
     {
-        
+        distanceScore++;
+        std::stringstream ss;
+        ss << "Distance : " << distanceScore;
+        distance.setString(ss.str());
         int speed = 200;
         oil_MAX--;
         bool jump = false;
@@ -220,10 +238,14 @@ int main()
                         break;
                     }
                     break;
-                }    
+                    
+                }  
+                //pause
+                
             }
         }
-        
+
+
         if (Keyboard::isKeyPressed(Keyboard::Right)) playerX += 0.1;
         if (Keyboard::isKeyPressed(Keyboard::Left)) playerX -= 0.1;
         if (Keyboard::isKeyPressed(Keyboard::Down)) speed = -200;
@@ -232,12 +254,14 @@ int main()
         {
             speed *= 3;
             oil_MAX = oil_MAX - 3;
+            distanceScore = distanceScore + 3;
         }
         if (Keyboard::isKeyPressed(Keyboard::Space))
         {
             H += 100;
             jump == true;
             oil_MAX = oil_MAX - 5;
+            distanceScore = distanceScore + 1.5;
         }
         if (H > 1500 && !(H < 1500))
         {
@@ -247,6 +271,20 @@ int main()
         {
             oil_MAX = 0;
             speed = 0;
+            distanceScore = distanceScore-1;
+            if (Keyboard::isKeyPressed(Keyboard::Tab))
+            {
+                speed *= 3;
+                oil_MAX = oil_MAX - 3;
+                distanceScore = distanceScore - 3;
+            }
+            if (Keyboard::isKeyPressed(Keyboard::Space))
+            {
+                H += 100;
+                jump == false;
+                oil_MAX = oil_MAX - 5;
+                distanceScore = distanceScore -1;
+            }
         }
         //oil spawn drop
 
@@ -303,20 +341,31 @@ int main()
         ////////draw objects////////
         for (int n = startPos + 300; n > startPos; n--)
             lines[n % N].drawSprite(app);
-        menu.draw(app);
+       // menu.draw(app);
         if (!isGameStarted)
         {
+           // app.display();
 
-          //  menu.draw(app);
+            app.clear();
+
+            //app.display();
+
+            menu.draw(app);
+
+            app.display();
 
            
-           
+
+           app.clear();
             
-        }
-        else
-        {
 
+
+        }
+        else if(isGameStarted)
+        {           
             app.draw(mark);
+
+            app.draw(distance);
 
             app.display();
 
@@ -328,3 +377,4 @@ int main()
     
     return 0;
 }
+
