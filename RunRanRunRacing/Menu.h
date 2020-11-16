@@ -27,6 +27,8 @@ private:
 	int selectedItemIndex;
 	sf::Font font;
 	sf::Text mainmenu[MAX_NUM_OF_ITEM];
+	sf::Texture menu;
+	sf::Sprite menusp;
 
 
 };

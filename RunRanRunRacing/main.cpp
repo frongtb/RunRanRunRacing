@@ -6,7 +6,6 @@
 #include<SFML/System.hpp>
 #include<SFML/Window.hpp>
 
-
 #include"Menu.h"
 #include"pauseMenu.h"
 
@@ -327,7 +326,7 @@ int main()
             if (l.Y >= maxy) continue;
             maxy = l.Y;
 
-            Color grass = (n / 3) % 2 ? Color(16, 200, 16) : Color(0, 154, 0);
+            Color grass = (n / 3) % 2 ? Color(16, 200, 16) : Color(147, 155, 119);
             Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
             Color road = (n / 3) % 2 ? Color(107, 107, 107) : Color(105, 105, 105);
 
@@ -341,16 +340,43 @@ int main()
         ////////draw objects////////
         for (int n = startPos + 300; n > startPos; n--)
             lines[n % N].drawSprite(app);
-       // menu.draw(app);
-        if (!isGameStarted)
+       
+
+        switch (isGameStarted)
+        {case 0:   
+            distanceScore = 0;
+            oil_MAX = 5100;
+            hpMax = 100;
+            app.clear();
+
+
+            menu.draw(app);
+
+
+            app.display();
+
+            app.clear();
+            break;
+        case 1:
+            app.draw(mark);
+
+            app.draw(distance);
+
+            app.display();
+
+            app.clear();
+            break;
+        }
+        /*if (!isGameStarted)
         {
            // app.display();
 
             app.clear();
 
             //app.display();
-
+            
             menu.draw(app);
+            
 
             app.display();
 
@@ -362,7 +388,8 @@ int main()
 
         }
         else if(isGameStarted)
-        {           
+        {       
+
             app.draw(mark);
 
             app.draw(distance);
@@ -371,7 +398,7 @@ int main()
 
             app.clear();
 
-        }
+        }*/
       
     }
     
