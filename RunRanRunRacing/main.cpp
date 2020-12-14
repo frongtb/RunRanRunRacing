@@ -8,26 +8,42 @@
 
 #include"Menu.h"
 #include"pauseMenu.h"
+#include"leaderBoard.h"
+#include "leaderBoard.cpp"
 
 #include<map>
 #include<time.h>
 #include<iostream>
 #include <sstream>
 #include <vector>
+
+
 using namespace sf;
+
 sf::Text distance;
 sf::RectangleShape playerOILBar;
 sf::RectangleShape playerOILBarBack;
 sf::RectangleShape playerHpBar;
 sf::RectangleShape playerHpBarBack;
+
+/*sf::Sprite coin;
+sf::FloatRect coin_texture;
+sf::FloatRect getCoinBounds()
+{
+    return coin_texture;
+}*/
+
 int width = 1024;
 int height = 768;
 int roadW = 2000;
-int segL = 200; //segment length
+int segL = 210; //segment length
 float camD = 0.84; //camera depth
-
+bool isAlive = true;
 bool isGameStarted ;
 bool ispaused;
+
+void generateObstacles(sf::Sprite[]);
+
 void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, int w2)
 {
     ConvexShape shape(4);
@@ -39,17 +55,19 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
     w.draw(shape);
 }
 
-
 struct Line
 {
     float x, y, z; //3d center of line
     float X, Y, W; //screen coord
     float curve, spriteX, clip, scale;
+    float oilX;
+    sf::Sprite oilSp;
+    sf::FloatRect oil_texture;
     Sprite sprite;
 
     Line()
     {
-        spriteX = curve = x = y = z = 0;
+        oilX= spriteX = curve = x = y = z = 0;
     }
 
     void project(int camX, int camY, int camZ)
@@ -83,11 +101,45 @@ struct Line
         s.setPosition(destX, destY);
         app.draw(s);
     }
+    void drawCoin(sf::RenderWindow& app)
+    {
+        sf::Sprite os = oilSp;
+        int w = os.getTextureRect().width;
+        int h = os.getTextureRect().height;
+
+        float destX = X + scale * oilX * width / 2;
+        float destY = Y - 2;
+        float destW = w * W / 266;
+        float destH = h * W / 266;
+
+        destX += destW * oilX;
+        destY += destH * (-1);
+
+        os.setTextureRect(sf::IntRect(0, 0, w, h - h / destH));
+        os.setScale(destW / w, destH / h);
+        os.setPosition(destX, destY);
+
+        oil_texture = os.getGlobalBounds();
+
+        app.draw(os);
+    }
+    sf::FloatRect getCoinBounds()
+    {
+        return oil_texture;
+    }
+    float gety() { return y; }
+    float getX() { return X; }
+    float getY() { return Y; }
+    float getW() { return W; }
+    float getCurve() { return curve; }
+
+  
 };
 
 
 int main()
 {
+    
     RenderWindow app(VideoMode(width, height), "Run Ran Run Racing!");
     app.setFramerateLimit(60);
     
@@ -97,8 +149,15 @@ int main()
     //pause
     pauseMenu pausemenu(app.getSize().x / 4, app.getSize().y / 4);
 
-   
+    //scoreboard
+    Clock clockForScore;
+    float collideTime = 0;
 
+    /*Texture tcoin;
+    tcoin.loadFromFile("images/oil-item.png");
+    tcoin.setSmooth(true);
+    Sprite coin;
+    coin.setTexture(tcoin);*/
     //oil drop
     float oilSpawnTimerMax = 20.f;
     float oilSpawnTimer;
@@ -111,7 +170,10 @@ int main()
     if (!font.loadFromFile("Fonts/Cascadia.ttf"))
         std::cout << "game failed to load font" << "\n";
 
-    
+    float groundHeight = height / 1.4;
+    float gravity = 20.0f;
+    bool isJumping = false;
+    float moveSpeed = 300.0f;
 
     distance.setFont(font);
     distance.setCharacterSize(18);
@@ -124,8 +186,39 @@ int main()
     mark.setFillColor(sf::Color::Black);
     mark.setString("X");
     mark.setPosition(app.getSize().x / 2.f - mark.getGlobalBounds().width / 2.f, app.getSize().y / 2.f - mark.getGlobalBounds().height / 2.f);
+   
+    //----CREATE COLLIDER-------//
+    CircleShape collider(30);
+    float colliderX = width / 2 - 40;
+    float colliderY = height / 2 + 200;
+    collider.setPosition(colliderX, colliderY);
 
-  
+    //------PLAYER SETUP--------//
+    Vector2i playerSize(210, 350); //size of each frame
+
+    Texture playerFoto;
+    playerFoto.loadFromFile("images/man.png");
+
+    Sprite player(playerFoto);
+    player.setPosition(width / 2 - 75, height / 2 - 50);
+
+    int framesNum = 27;
+    float animDuration = 0.45; //seconds
+
+    Clock clockForPlayer;
+    float deltatime = 0; //for elapsed time
+
+        //----LOAD water----//
+    Texture toil;
+    toil.loadFromFile("images/oil-item.png");
+    toil.setSmooth(true);
+    Sprite oilSp;
+    oilSp.setTexture(toil);
+
+    /// <summary>
+    /// ////////////////////////////////////////////
+    /// </summary>
+    /// <returns></returns>
     Texture t[50];
     Sprite object[50];
     for (int i = 1; i <= 7; i++)
@@ -142,29 +235,25 @@ int main()
     sBackground.setTextureRect(IntRect(0, 0, 5000, 411));
     sBackground.setPosition(-2000, 0);
 
-    std::vector<Line> lines;
-
-    for (int i = 0; i < 1600; i++)
+   /* //item
+    int x, y;
+    x = rand() % 1024 + 3;
+    y = rand() % 768 + 3;
+    sf::Texture item;
+    sf::Sprite itemsp;
+    item.loadFromFile("images/oil-item.png");
+    itemsp.setTexture(item);
+    itemsp.setScale(Vector2f(0.25f, 0.25f));
+  
+ 
+    //itemsp.setPosition(x, y);
+    if (itemsp.getGlobalBounds().intersects(mark.getGlobalBounds()))
     {
-        Line line;
-        line.z = i * segL;
-
-        if (i > 300 && i < 700) line.curve = 0.5;
-        if (i > 1100) line.curve = -0.7;
-        //object
-        if (i < 300 && i % 20 == 0) { line.spriteX = -1.7; line.sprite = object[5]; }
-        if (i % 17 == 0) { line.spriteX = 2.0; line.sprite = object[6]; }
-        if (i % 50 == 0) { line.spriteX = 2.0; line.sprite = object[1]; }
-        if (i > 300 && i % 20 == 0) { line.spriteX = -1.4; line.sprite = object[2]; }
-        if (i > 800 && i % 20 == 0) { line.spriteX = -1.2; line.sprite = object[1]; }
-        if (i == 400) { line.spriteX = -1.3; line.sprite = object[7]; }
-
-        if (i > 750) line.y = sin(i / 30.0) * 1500;
-
-        lines.push_back(line);
+        oil_MAX = oil_MAX + 50;
     }
+    */
     int distanceScore = 0;
-    int N = lines.size();
+    
     float playerX = 0;
     int pos = 0;
     int H = 1500;
@@ -174,6 +263,85 @@ int main()
     int hpMax = 100;
     int hp;
     hp = hpMax;
+    std::vector<Line> lines;
+
+    for (int i = 0; i < 1600; i++)
+    {
+        Line line;
+        line.z = i * segL;
+
+        if (i > 300 && i < 700)
+        {
+            line.curve = 0.5;
+        }
+        if (i > 1100)
+        {
+            line.curve = -0.7;
+        }
+            //object
+        
+        if (i < 300 && i % 20 == 0) 
+        { 
+            line.spriteX = -1.7; line.sprite = object[5]; 
+        }
+        if (i % 17 == 0) 
+        {
+            line.spriteX = 2.0; line.sprite = object[6]; 
+        }
+        if (i % 50 == 0)
+        {
+            line.spriteX = 2.0; line.sprite = object[1];
+        }
+        if (i > 300 && i % 20 == 0) 
+        {
+            line.spriteX = -1.4; line.sprite = object[2]; 
+        }
+        if (i > 800 && i % 20 == 0) 
+        { 
+            line.spriteX = -1.2; line.sprite = object[1]; 
+        }
+        if (i == 400) 
+        { 
+            line.spriteX = -1.3; line.sprite = object[9];
+        }
+        if (i > 750) line.y = sin(i / 30.0) * 1500;
+        /*
+        if (i > 150 && (i + 21) % 59 == 0)
+        {
+            lines[i].oilX = 0.5; lines[i].oilSp = object[3];
+        }
+        if (i > 150 && i % 59 == 0)
+        {
+            lines[i].oilX = -2.5; lines[i].oilSp = object[3];
+        }
+        if (i > 101 && (i - 21) % 49 == 0)
+        {
+            lines[i].oilX = 2.2; lines[i].oilSp = object[3];
+        }
+    */
+        //item
+
+        
+
+        if (i == 0) 
+        { 
+            line.spriteX = -0.5;
+            line.sprite = object[3];//itemsp; 
+        }
+        if (object[3].getPosition().x == mark.getPosition().x && object[3].getPosition().y == mark.getPosition().y)
+        {
+            oil_MAX = oil_MAX + 1000;
+        }
+        /*if (itemsp.getGlobalBounds().intersects(mark.getGlobalBounds()) && i == 0)
+        {
+            oil_MAX = oil_MAX + 1000;
+        }*/
+      
+        lines.push_back(line);
+    }
+
+    int N = lines.size();
+
     //oil bar
     playerOILBar.setSize(sf::Vector2f(300.f, 25.f));
     playerOILBar.setFillColor(sf::Color::Blue);
@@ -190,7 +358,10 @@ int main()
     playerHpBarBack = playerHpBar;
     playerHpBarBack.setFillColor(sf::Color(25, 25, 25, 200));
 
-    
+
+
+ 
+
     while (app.isOpen())
     {
         distanceScore++;
@@ -208,7 +379,7 @@ int main()
                 app.close();
             if (e.type == Event::KeyReleased)
             {
-                jump == false;
+                isJumping == false;
                 switch (e.key.code )
                 {
                 case::sf::Keyboard::W:
@@ -231,6 +402,7 @@ int main()
                         break;
                     case 2:
                         std::cout << "Scoreboard" << "\n";
+                      
                         break;
                     case 3:
                         app.close();
@@ -243,11 +415,41 @@ int main()
                 
             }
         }
+        //------PLAYER ANIMATION-----------//
+        if (isAlive)
+            deltatime += clockForPlayer.restart().asSeconds();
+        //---Get Current Frame----//
+        int animFrame = static_cast<int>((deltatime / animDuration) * framesNum/2) % (framesNum);
 
+        //---Set Sprite Rectangle Based on Frame---//
+        player.setTextureRect(IntRect(animFrame* playerSize.x, 0, playerSize.x, playerSize.y));
 
-        if (Keyboard::isKeyPressed(Keyboard::Right)) playerX += 0.1;
-        if (Keyboard::isKeyPressed(Keyboard::Left)) playerX -= 0.1;
-        if (Keyboard::isKeyPressed(Keyboard::Down)) speed = -200;
+        if (Keyboard::isKeyPressed(Keyboard::Right))
+        {
+            //playerX += 0.1;
+            if (collider.getPosition().x < colliderX + 300)
+            {
+                collider.move(20, 0); player.move(20, 0);
+            }
+        }
+        if (Keyboard::isKeyPressed(Keyboard::Left))
+        {
+            //playerX -= 0.1;
+            if (collider.getPosition().x > colliderX - 300)
+            {
+                collider.move(-20, 0); player.move(-20, 0);
+            }
+        }
+
+        if (player.getPosition().y < groundHeight && collider.getPosition().y < groundHeight && isJumping == true) {
+            player.move(0, gravity);
+            collider.move(0, gravity);
+        }
+        /*if (Keyboard::isKeyPressed(Keyboard::Down)) 
+        { 
+            distanceScore = distanceScore - 2;
+            speed = -200;
+        }*/
 
         if (Keyboard::isKeyPressed(Keyboard::Tab))
         {
@@ -257,9 +459,14 @@ int main()
         }
         if (Keyboard::isKeyPressed(Keyboard::Space))
         {
-            H += 100;
-            jump == true;
-            oil_MAX = oil_MAX - 5;
+            if (collider.getPosition().y >= (height / 2 + 100)) {
+                isJumping = true;
+                collider.move(0, -moveSpeed);
+                player.move(0, -moveSpeed);
+
+            }
+            //H += 100;
+            oil_MAX = oil_MAX - 10;
             distanceScore = distanceScore + 1.5;
         }
         if (H > 1500 && !(H < 1500))
@@ -268,6 +475,7 @@ int main()
         }
         if (oil_MAX <= 0)
         {
+            isAlive = false;
             oil_MAX = 0;
             speed = 0;
             distanceScore = distanceScore-1;
@@ -284,8 +492,7 @@ int main()
                 oil_MAX = oil_MAX - 5;
                 distanceScore = distanceScore -1;
             }
-        }
-        //oil spawn drop
+        } 
 
         pos += speed;
         while (pos >= N * segL) pos -= N * segL;
@@ -302,9 +509,18 @@ int main()
         float x = 0, dx = 0;
         //hp
         if (hpMax <= 0)
+        {
             hpMax = 0;
+            isAlive = false;
+        }
+            
         if (hpMax >= 100)
             hpMax = 100;
+
+        if (oil_MAX >= 5100)
+        {
+            oil_MAX = 5100;
+        }
         //bar
         app.draw(playerHpBarBack);
         app.draw(playerHpBar);
@@ -340,7 +556,8 @@ int main()
         ////////draw objects////////
         for (int n = startPos + 300; n > startPos; n--)
             lines[n % N].drawSprite(app);
-       
+
+      
 
         switch (isGameStarted)
         {case 0:   
@@ -348,18 +565,19 @@ int main()
             oil_MAX = 5100;
             hpMax = 100;
             app.clear();
-
-
+           
             menu.draw(app);
-
 
             app.display();
 
             app.clear();
             break;
         case 1:
-            app.draw(mark);
 
+            //app.draw(itemsp);
+            
+            app.draw(mark); 
+            app.draw(player);
             app.draw(distance);
 
             app.display();
@@ -367,41 +585,10 @@ int main()
             app.clear();
             break;
         }
-        /*if (!isGameStarted)
-        {
-           // app.display();
-
-            app.clear();
-
-            //app.display();
-            
-            menu.draw(app);
-            
-
-            app.display();
-
-           
-
-           app.clear();
-            
-
-
-        }
-        else if(isGameStarted)
-        {       
-
-            app.draw(mark);
-
-            app.draw(distance);
-
-            app.display();
-
-            app.clear();
-
-        }*/
+  
       
     }
-    
+ 
     return 0;
 }
 

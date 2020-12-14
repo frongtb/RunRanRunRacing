@@ -145,12 +145,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HowToPlay.cpp" />
     <ClCompile Include="leaderBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="pauseMenu.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HowToPlay.h" />
     <ClInclude Include="leaderBoard.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="pauseMenu.h" />

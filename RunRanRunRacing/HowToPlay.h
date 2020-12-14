@@ -13,16 +13,13 @@
 #include <vector>
 
 #define MAX_NUM_OF_ITEM 4
-class Menu
+class HowToPlay
 {
 public:
-	Menu(float width,float height);
-	virtual ~Menu();
+	HowToPlay(float width, float height);
+	virtual ~HowToPlay();
 
 	void draw(sf::RenderWindow& app);
-	void MoveUp();
-	void MoveDown();
-	int GetPressedItem() { return selectedItemIndex; }
 
 private:
 	int selectedItemIndex;
@@ -33,4 +30,6 @@ private:
 
 
 };
+
+
 
