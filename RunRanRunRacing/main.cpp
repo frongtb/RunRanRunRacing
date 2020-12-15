@@ -774,7 +774,7 @@ void updateAndSaveScore()
     std::vector<NameWithScore> namesWithScore;
 
     NameWithScore currentPlayer;
-    currentPlayer.score = distanceScore + 10000;
+    currentPlayer.score = distanceScore ;
 
     namesWithScore.push_back(currentPlayer);
 
