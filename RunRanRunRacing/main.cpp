@@ -8,8 +8,6 @@
 
 #include"Menu.h"
 #include"pauseMenu.h"
-#include"leaderBoard.h"
-#include "leaderBoard.cpp"
 #include"HowToPlay.h"
 
 #include<map>
@@ -46,6 +44,7 @@ bool isGameStarted ;
 bool ispaused;
 bool isHTP = false;
 bool isMenu = true;
+bool isHS = false;
 
 void generateObstacles(sf::Sprite[]);
 
@@ -159,6 +158,8 @@ int main()
     Menu menu(app.getSize().x,app.getSize().y);
     //how to play
     HowToPlay htp(app.getSize().x, app.getSize().y);
+    //high score
+
     //pause
     pauseMenu pausemenu(app.getSize().x / 4, app.getSize().y / 4);
 
@@ -289,7 +290,7 @@ int main()
     hp = hpMax;
     std::vector<Line> lines;
 
-    for (int i = 0; i < 100000; i++)
+    for (int i = 0; i < 20000; i++)
     {
         Line line;
         line.z = i * segL;
@@ -459,6 +460,7 @@ int main()
                             break;
                         case 2:
                             std::cout << "Scoreboard" << "\n";
+                            isHS = true;
 
                             break;
                         case 3:
@@ -596,21 +598,6 @@ int main()
         int camH = lines[startPos].y + H;
         if (speed > 0) sBackground.move(-lines[startPos].curve * 2, 0);
         if (speed < 0) sBackground.move(lines[startPos].curve * 2, 0);
-        /*
-        if (lines[startPos + 5].getOilBounds().intersects(collider.getGlobalBounds()))
-        {
-            //oil_MAX = oil_MAX + 1000;
-            //playCoin.play();
-        }
-        */
-      
-        
-        /*//-------DRAWING OBSTACLES AND COINS----------//
-        for (int n = startPos + 300; n > startPos; n--)
-        {
-            lines[n % N].drawSprite(app);
-            lines[n % N].drawOil(app);
-        }*/
 
         if (isAlive)
         {
@@ -645,9 +632,7 @@ int main()
                 collideSound.play();
             }
         }
-            
-        
-        
+                 
         int maxy = height;
         float x = 0, dx = 0;
       
@@ -711,14 +696,24 @@ int main()
 
             app.clear();      
             if (isHTP == true)
-        {
+            {
             
             app.clear();
             htp.draw(app);
             app.display();
             app.clear();
             isMenu = false;
-        } }
+            } 
+            if (isHS == true)
+            {
+
+                app.clear();
+                htp.draw(app);
+                app.display();
+                app.clear();
+                isMenu = false;
+            }
+            }
             
        
             break;
@@ -748,7 +743,18 @@ int main()
                 break;
             }
         }
-      
+        if (isHS == true)
+        {
+            switch (e.key.code)
+            {
+            case::sf::Keyboard::M:
+                isMenu = true;
+                isHS = false;
+                break;
+            default:
+                break;
+            }
+        }
     }
  
     return 0;

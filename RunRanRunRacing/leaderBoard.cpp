@@ -1,4 +1,4 @@
-/*#include "leaderBoard.h"
+#include "leaderBoard.h"
 
 bool sortinrev(const pair<int, string>& a, const pair<int, string>& b) {
 	return(a.first > b.first);
@@ -87,4 +87,3 @@ void leaderBoard::Draw(RenderWindow& window)
 	}
 	window.draw(title);
 }
-*/

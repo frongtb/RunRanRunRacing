@@ -1,4 +1,4 @@
-/*#pragma once
+#pragma once
 #include <iostream>
 #include <SFML\Graphics.hpp>
 #include <algorithm>
@@ -26,4 +26,3 @@ private:
 
 	vector<pair<int, string>> pairScoreName;
 };
-*/
