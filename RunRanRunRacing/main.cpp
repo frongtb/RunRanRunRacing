@@ -1,4 +1,4 @@
-#include <SFML/Graphics.hpp>
+Ôªø#include <SFML/Graphics.hpp>
 #include<SFML/Audio.hpp>
 #include <SFML/OpenGL.hpp>
 #include<SFML/Main.hpp>
@@ -35,22 +35,22 @@ sf::FloatRect getCoinBounds()
 
 int width = 1024;
 int height = 768;
-
+int distanceScore = 0;
 unsigned int roadW = 2000;
 int segL = 210; //segment length
 float camD = 0.84; //camera depth
 bool isAlive = false;
-bool isGameStarted ;
+bool isGameStarted;
 bool ispaused;
 bool isHTP = false;
 bool isMenu = true;
 bool isHS = false;
-
+void updateAndSaveScore();
 void generateObstacles(sf::Sprite[]);
 
 void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, int w2)
 {
-    
+
     ConvexShape shape(4);
     shape.setFillColor(c);
     shape.setPoint(0, Vector2f(x1 - w1, y1));
@@ -72,7 +72,7 @@ struct Line
 
     Line()
     {
-        oilX= spriteX = curve = x = y = z = 0;
+        oilX = spriteX = curve = x = y = z = 0;
     }
 
     void project(int camX, int camY, int camZ)
@@ -117,21 +117,16 @@ struct Line
         sf::Sprite os = oilSp;
         int w = os.getTextureRect().width;
         int h = os.getTextureRect().height;
-
         float destX = X + scale * oilX * width / 2;
         float destY = Y - 2;
         float destW = w * W / 266;
         float destH = h * W / 266;
-
         destX += destW * oilX;
         destY += destH * (-1);
-
         os.setTextureRect(sf::IntRect(0, 0, w, h - h / destH));
         os.setScale(destW / w, destH / h);
         os.setPosition(destX, destY);
-
         oil_texture = os.getGlobalBounds();
-
         app.draw(os);
     }*/
     sf::FloatRect getOilBounds()
@@ -144,18 +139,18 @@ struct Line
     float getW() { return W; }
     float getCurve() { return curve; }
 
-  
+
 };
 
 
 int main()
 {
-    
+
     RenderWindow app(VideoMode(width, height), "Run Ran Run Racing!");
     app.setFramerateLimit(60);
-    
+
     //menu
-    Menu menu(app.getSize().x,app.getSize().y);
+    Menu menu(app.getSize().x, app.getSize().y);
     //how to play
     HowToPlay htp(app.getSize().x, app.getSize().y);
     //high score
@@ -195,8 +190,8 @@ int main()
     distance.setString("X");
     distance.setPosition(25.f, 25.f);
 
- 
-   
+
+
     //----CREATE COLLIDER-------//
     CircleShape collider(30);
     float colliderX = width / 2 - 40;
@@ -208,7 +203,7 @@ int main()
 
     Texture playerFoto;
     playerFoto.loadFromFile("images/man2.png");
-    
+
 
     Sprite player(playerFoto);
     player.setPosition(width / 2 - 75, height / 2 - 50);
@@ -227,27 +222,27 @@ int main()
     oilSp.setTexture(toil);
 
     //----LOAD SOUNDS-------//
-    //‡ ’¬ß¢¬—∫
+    //√†√ä√ï√Ç¬ß¬¢√Ç√ë¬∫
     SoundBuffer turnb;
     turnb.loadFromFile("images/turn sound.ogg");
     Sound playJ(turnb);
-    //‡ ’¬ß™π
+    //√†√ä√ï√Ç¬ß¬™¬π
     SoundBuffer collisonbuff;
     collisonbuff.loadFromFile("images/hit-hugh.ogg");
     Sound collideSound(collisonbuff);
-    //‡ ’¬ßµ√∫¡◊Õ
+    //√†√ä√ï√Ç¬ß¬µ√É¬∫√Å√ó√ç
     SoundBuffer hss;
     hss.loadFromFile("images/get-HS.ogg");
     Sound hssSound(hss);
-    //Œ‘«
+    //√é√î√á
     SoundBuffer collisonheal;
     collisonheal.loadFromFile("images/heal.ogg");
     Sound healSound(collisonheal);
-    //¢«¥πÈ”
+    //¬¢√á¬¥¬π√©√ì
     SoundBuffer collisonbot;
     collisonbot.loadFromFile("images/bottle.ogg");
     Sound botSound(collisonbot);
-    //‡æ≈ßæ◊Èπ
+    //√†¬æ√Ö¬ß¬æ√ó√©¬π
     Music gameMusic;
     gameMusic.openFromFile("images/bg-sound.ogg");
     gameMusic.setLoop(true);
@@ -276,9 +271,12 @@ int main()
     sBackground.setPosition(-200000, -100);
     sBackground.setScale(sf::Vector2f(100.0f, 2.0f));
 
- 
-    int distanceScore = 0;
+
+    Texture bg3;
+    bg3.loadFromFile("images/bgmenu3.png");
+    Sprite hsBackground(bg3);
     
+
     float playerX = 0;
     int pos = 0;
     int H = 1500;
@@ -303,58 +301,58 @@ int main()
         {
             line.curve = -0.7;
         }
-            //object
-        
-        if (i < 300 && i % 20 == 0) 
-        { 
-            line.spriteX = -1.7; line.sprite = object[5]; 
-        }
-        if (i % 17 == 0) 
+        //object
+
+        if (i < 300 && i % 20 == 0)
         {
-            line.spriteX = 2.0; line.sprite = object[6]; 
+            line.spriteX = -1.7; line.sprite = object[5];
+        }
+        if (i % 17 == 0)
+        {
+            line.spriteX = 2.0; line.sprite = object[6];
         }
         if (i % 50 == 0)
         {
             line.spriteX = 2.0; line.sprite = object[1];
         }
-        if (i > 300 && i % 20 == 0) 
+        if (i > 300 && i % 20 == 0)
         {
-            line.spriteX = -1.4; line.sprite = object[2]; 
+            line.spriteX = -1.4; line.sprite = object[2];
         }
-        if (i > 800 && i % 20 == 0) 
-        { 
-            line.spriteX = -1.5; line.sprite = object[1]; 
+        if (i > 800 && i % 20 == 0)
+        {
+            line.spriteX = -1.5; line.sprite = object[1];
         }
-        if (i == 400) 
-        { 
+        if (i == 400)
+        {
             line.spriteX = -1.6; line.sprite = object[9];
         }
         if (i > 750) line.y = sin(i / 30.0) * 1500;
 
-        
+
         //item
-        //¢«¥
+        //¬¢√á¬¥
         if (i > 200 && (i + 30) % 1000 == 0)
         {
             //lines[i].oilX = 0.5; lines[i].oilSp = object[3];
-            line.spriteX =  -0.5;
+            line.spriteX = -0.5;
             line.sprite = object[3];
         }
-        /*//À—«„®
+        /*//√ã√ë√á√£¬®
         if (i > 200 && (i + 29) % 900 == 0)
         {
             //lines[i].oilX = 0.5; lines[i].oilSp = object[3];
             line.spriteX = -0.2;
             line.sprite = object[7];
         }*/
-        //∑’Ë°—Èπ¬“«
+        //¬∑√ï√®¬°√ë√©¬π√Ç√í√á
         if (i > 150 && i % 69 == 0)
         {
             //lines[i].oilX = -2.5; lines[i].oilSp = object[3];
             line.spriteX = rand() % 2 - 0.4;
             line.sprite = object[12];
         }
-        //À‘π
+        //√ã√î¬π
         if (i > 101 && (i - 21) % 98 == 0)
         {
             //lines[i].oilX = 2.2; lines[i].oilSp = object[3];
@@ -373,14 +371,14 @@ int main()
             line.spriteX = rand() % 2 - 0.6;
             line.sprite = object[10];
         }
-      
+
         /*
-        if (i == 0) 
-        { 
+        if (i == 0)
+        {
             line.spriteX = -0.5;
-            line.sprite = object[3];//itemsp; 
+            line.sprite = object[3];//itemsp;
         }*/
-  
+
         /*if (itemsp.getGlobalBounds().intersects(mark.getGlobalBounds()) && i == 0)
         {
             oil_MAX = oil_MAX + 1000;
@@ -391,7 +389,7 @@ int main()
         }
         lines.push_back(line);
     }
-    
+
     int N = lines.size();
 
     //oil bar
@@ -412,7 +410,7 @@ int main()
 
 
 
- 
+
 
     while (app.isOpen())
     {
@@ -426,7 +424,7 @@ int main()
         Event e;
         while (app.pollEvent(e))
         {
-            
+
             if (e.type == Event::Closed)
                 app.close();
             if (e.type == Event::KeyReleased)
@@ -442,7 +440,7 @@ int main()
                     case::sf::Keyboard::S:
                         menu.MoveDown();
                         break;
-                   
+
                     case::sf::Keyboard::Return:
                         switch (menu.GetPressedItem())
                         {
@@ -456,7 +454,7 @@ int main()
                         case 1:
                             std::cout << "How to Play" << "\n";
                             isHTP = true;
-                          
+
                             break;
                         case 2:
                             std::cout << "Scoreboard" << "\n";
@@ -467,15 +465,15 @@ int main()
                             app.close();
                             break;
                         }case::Keyboard::M:
-                         isMenu = true;
-                        break;
+                            isMenu = true;
+                            break;
 
                     }
-                     
+
                 }
-             
+
                 //pause
-                
+
             }
         }
         //------PLAYER ANIMATION-----------//
@@ -508,6 +506,7 @@ int main()
             {
                 isAlive = false;
                 speed = 0;
+                updateAndSaveScore();
                 distanceScore = distanceScore - 1;
                 oil_MAX = oil_MAX + 1;
                 if (Keyboard::isKeyPressed(Keyboard::Space))
@@ -528,14 +527,14 @@ int main()
                 distanceScore = distanceScore - 2;
                 speed = -200;
             }*/
-            
+
             if (Keyboard::isKeyPressed(Keyboard::Tab))
             {
                 speed *= 3;
                 oil_MAX = oil_MAX - 3;
                 distanceScore = distanceScore + 3;
             }
-            
+
             if (Keyboard::isKeyPressed(Keyboard::Space))
             {
                 playJ.play();
@@ -548,7 +547,7 @@ int main()
                 //H += 100;
                 oil_MAX = oil_MAX - rand() % 5 - 5;
                 //distanceScore = distanceScore + 1.5;
-                
+
             }
         }
         if (H > 1500 && !(H < 1500))
@@ -560,24 +559,26 @@ int main()
             isAlive = false;
             oil_MAX = 0;
             speed = 0;
+            updateAndSaveScore();
             distanceScore = distanceScore - 1;
-       
+
             if (Keyboard::isKeyPressed(Keyboard::Space))
             {
                 H += 100;
                 isJumping == false;
                 oil_MAX = oil_MAX + 5;
-               // distanceScore = distanceScore - 1;
+                // distanceScore = distanceScore - 1;
             }
             isGameStarted = false;
-        } 
-            //hp
+        }
+        //hp
         if (hpMax <= 0)
         {
             hpMax = 0;
             isAlive = false;
-            oil_MAX = oil_MAX +1 ;
+            oil_MAX = oil_MAX + 1;
             speed = 0;
+            updateAndSaveScore();
             distanceScore = distanceScore - 1;
             if (Keyboard::isKeyPressed(Keyboard::Space))
             {
@@ -610,33 +611,30 @@ int main()
             /*if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.2))
             {
                 hpMax = hpMax + 20;
-
                 healSound.play();
             }*/
             /*if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.7 ))
             {
                 hpMax = hpMax - 1;
-
                 collideSound.play();
             }
             if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.4))
             {
                 hpMax = hpMax - 1;
-
                 collideSound.play();
             }*/
-            if (lines[startPos +100].getObstacleBounds().intersects(collider.getGlobalBounds()) )
+            if (lines[startPos + 100].getObstacleBounds().intersects(collider.getGlobalBounds()))
             {
                 hpMax = hpMax - 1;
 
                 collideSound.play();
             }
         }
-                 
+
         int maxy = height;
         float x = 0, dx = 0;
-      
-            
+
+
         if (hpMax >= 100)
             hpMax = 100;
 
@@ -680,46 +678,48 @@ int main()
         for (int n = startPos + 300; n > startPos; n--)
             lines[n % N].drawSprite(app);
 
-      
+
 
         switch (isGameStarted)
-        {case 0: 
-            if(isMenu)
-            { distanceScore = 0;
-            oil_MAX = 5100;
-            hpMax = 100;
-            app.clear();
-           
-            menu.draw(app);
-
-            app.display();
-
-            app.clear();      
-            if (isHTP == true)
+        {
+        case 0:
+            if (isMenu)
             {
-            
-            app.clear();
-            htp.draw(app);
-            app.display();
-            app.clear();
-            isMenu = false;
-            } 
-            if (isHS == true)
-            {
-
+                distanceScore = 0;
+                oil_MAX = 5100;
+                hpMax = 100;
                 app.clear();
-                htp.draw(app);
+
+                menu.draw(app);
+
                 app.display();
+
                 app.clear();
-                isMenu = false;
+                if (isHTP == true)
+                {
+
+                    app.clear();
+                    htp.draw(app);
+                    app.display();
+                    app.clear();
+                    isMenu = false;
+                }
+                if (isHS == true)
+                {
+
+                    app.clear();
+                    app.draw(hsBackground);
+                    app.display();
+                    app.clear();
+                    isMenu = false;
+                }
             }
-            }
-            
-       
+
+
             break;
         case 1:
 
-            
+
             //app.draw(mark); 
             app.draw(player);
             app.draw(distance);
@@ -728,9 +728,9 @@ int main()
 
             app.clear();
             break;
-     
+
         }
-        
+
         if (isHTP == true)
         {
             switch (e.key.code)
@@ -756,7 +756,61 @@ int main()
             }
         }
     }
- 
+
     return 0;
+}
+void updateAndSaveScore()
+{
+
+    typedef struct NameWithScore {
+        std::string name;
+        int score;
+    } NameWithScore;
+
+    auto compareScores = [](NameWithScore p_1, NameWithScore p_2) {
+        return p_1.score > p_2.score;
+    };
+
+    std::vector<NameWithScore> namesWithScore;
+
+    NameWithScore currentPlayer;
+    currentPlayer.score = distanceScore + 10000;
+
+    namesWithScore.push_back(currentPlayer);
+
+    std::ifstream ifs("images/scores.txt");
+
+    if (ifs.is_open())
+    {
+
+        std::string playerScore = "";
+
+        while (ifs >> playerScore)
+        {
+            NameWithScore temp;
+            temp.score = std::stoi(playerScore);
+            namesWithScore.push_back(temp);
+        }
+
+
+    }
+    ifs.close();
+
+    std::sort(namesWithScore.begin(), namesWithScore.end(), compareScores);
+
+    while (namesWithScore.size() > 5) {
+        namesWithScore.pop_back();
+    }
+
+    std::fstream ofs;
+
+    ofs.open("images/scores.txt", std::ios::out | std::ios::trunc);
+
+    for (auto nameWithScore : namesWithScore)
+    {
+        ofs << std::to_string(nameWithScore.score) + "\n";
+    }
+
+    ofs.close();
 }
 
