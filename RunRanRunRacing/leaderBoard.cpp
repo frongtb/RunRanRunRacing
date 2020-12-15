@@ -38,7 +38,7 @@ leaderBoard::~leaderBoard()
 void leaderBoard::fistWriteText()
 {
 
-	ifstream Ifile(txt + "ScoreBoard.txt");
+	ifstream Ifile(txt + "images/ScoreBoard.txt");
 	do {
 		Ifile >> line;
 		sScore = line.substr(0, line.find(','));
@@ -53,18 +53,18 @@ void leaderBoard::fistWriteText()
 
 }
 
-void leaderBoard::writeText(string str, int score)
+void leaderBoard::writeText(string str, int distance)
 {
-	pairScoreName.push_back(make_pair(score, str));
+	pairScoreName.push_back(make_pair(distance, str));
 	sort(pairScoreName.begin(), pairScoreName.end(), sortinrev);
 
-	ofstream Ofile(txt + "ScoreBoard.txt");
+	ofstream Ofile(txt + "images/ScoreBoard.txt");
 	for (int i = 0; i < 5; i++) {
 		Ofile << pairScoreName[i].first << ',' << pairScoreName[i].second << endl;
 	}
 	Ofile.close();
 	pairScoreName.clear();
-	ifstream Ifile(txt + "ScoreBoard.txt");
+	ifstream Ifile(txt + "images/ScoreBoard.txt");
 	do
 	{
 		Ifile >> line;
@@ -86,4 +86,5 @@ void leaderBoard::Draw(RenderWindow& window)
 		window.draw(Tscore[i]);
 	}
 	window.draw(title);
-}*/
+}
+*/

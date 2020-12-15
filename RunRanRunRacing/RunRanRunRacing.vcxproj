@@ -146,6 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HowToPlay.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="leaderBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Menu.cpp" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HowToPlay.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="leaderBoard.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="pauseMenu.h" />

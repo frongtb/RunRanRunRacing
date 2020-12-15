@@ -10,16 +10,18 @@
 #include"pauseMenu.h"
 #include"leaderBoard.h"
 #include "leaderBoard.cpp"
+#include"HowToPlay.h"
 
 #include<map>
 #include<time.h>
 #include<iostream>
 #include <sstream>
 #include <vector>
-
+#include <algorithm>
+#include <fstream>
 
 using namespace sf;
-
+sf::FloatRect texture_rect;
 sf::Text distance;
 sf::RectangleShape playerOILBar;
 sf::RectangleShape playerOILBarBack;
@@ -35,17 +37,21 @@ sf::FloatRect getCoinBounds()
 
 int width = 1024;
 int height = 768;
-int roadW = 2000;
+
+unsigned int roadW = 2000;
 int segL = 210; //segment length
 float camD = 0.84; //camera depth
-bool isAlive = true;
+bool isAlive = false;
 bool isGameStarted ;
 bool ispaused;
+bool isHTP = false;
+bool isMenu = true;
 
 void generateObstacles(sf::Sprite[]);
 
 void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, int w2)
 {
+    
     ConvexShape shape(4);
     shape.setFillColor(c);
     shape.setPoint(0, Vector2f(x1 - w1, y1));
@@ -61,7 +67,7 @@ struct Line
     float X, Y, W; //screen coord
     float curve, spriteX, clip, scale;
     float oilX;
-    sf::Sprite oilSp;
+    Sprite oilSp;
     sf::FloatRect oil_texture;
     Sprite sprite;
 
@@ -99,9 +105,15 @@ struct Line
         s.setTextureRect(IntRect(0, 0, w, h - h * clipH / destH));
         s.setScale(destW / w, destH / h);
         s.setPosition(destX, destY);
+
+        texture_rect = s.getGlobalBounds();
         app.draw(s);
     }
-    void drawCoin(sf::RenderWindow& app)
+    sf::FloatRect getObstacleBounds()
+    {
+        return texture_rect;
+    }
+    /*void drawOil(sf::RenderWindow& app)
     {
         sf::Sprite os = oilSp;
         int w = os.getTextureRect().width;
@@ -122,8 +134,8 @@ struct Line
         oil_texture = os.getGlobalBounds();
 
         app.draw(os);
-    }
-    sf::FloatRect getCoinBounds()
+    }*/
+    sf::FloatRect getOilBounds()
     {
         return oil_texture;
     }
@@ -145,7 +157,8 @@ int main()
     
     //menu
     Menu menu(app.getSize().x,app.getSize().y);
-
+    //how to play
+    HowToPlay htp(app.getSize().x, app.getSize().y);
     //pause
     pauseMenu pausemenu(app.getSize().x / 4, app.getSize().y / 4);
 
@@ -181,11 +194,7 @@ int main()
     distance.setString("X");
     distance.setPosition(25.f, 25.f);
 
-    mark.setFont(font);
-    mark.setCharacterSize(18);
-    mark.setFillColor(sf::Color::Black);
-    mark.setString("X");
-    mark.setPosition(app.getSize().x / 2.f - mark.getGlobalBounds().width / 2.f, app.getSize().y / 2.f - mark.getGlobalBounds().height / 2.f);
+ 
    
     //----CREATE COLLIDER-------//
     CircleShape collider(30);
@@ -197,7 +206,8 @@ int main()
     Vector2i playerSize(210, 350); //size of each frame
 
     Texture playerFoto;
-    playerFoto.loadFromFile("images/man.png");
+    playerFoto.loadFromFile("images/man2.png");
+    
 
     Sprite player(playerFoto);
     player.setPosition(width / 2 - 75, height / 2 - 50);
@@ -215,13 +225,42 @@ int main()
     Sprite oilSp;
     oilSp.setTexture(toil);
 
+    //----LOAD SOUNDS-------//
+    //เสียงขยับ
+    SoundBuffer turnb;
+    turnb.loadFromFile("images/turn sound.ogg");
+    Sound playJ(turnb);
+    //เสียงชน
+    SoundBuffer collisonbuff;
+    collisonbuff.loadFromFile("images/hit-hugh.ogg");
+    Sound collideSound(collisonbuff);
+    //เสียงตรบมือ
+    SoundBuffer hss;
+    hss.loadFromFile("images/get-HS.ogg");
+    Sound hssSound(hss);
+    //ฮิว
+    SoundBuffer collisonheal;
+    collisonheal.loadFromFile("images/heal.ogg");
+    Sound healSound(collisonheal);
+    //ขวดน้ำ
+    SoundBuffer collisonbot;
+    collisonbot.loadFromFile("images/bottle.ogg");
+    Sound botSound(collisonbot);
+    //เพลงพื้น
+    Music gameMusic;
+    gameMusic.openFromFile("images/bg-sound.ogg");
+    gameMusic.setLoop(true);
+
+    app.setKeyRepeatEnabled(false);
+    gameMusic.play();
     /// <summary>
     /// ////////////////////////////////////////////
     /// </summary>
     /// <returns></returns>
+
     Texture t[50];
     Sprite object[50];
-    for (int i = 1; i <= 7; i++)
+    for (int i = 1; i <= 12; i++)
     {
         t[i].loadFromFile("images/" + std::to_string(i) + ".png");
         t[i].setSmooth(true);
@@ -233,25 +272,10 @@ int main()
     bg.setRepeated(true);
     Sprite sBackground(bg);
     sBackground.setTextureRect(IntRect(0, 0, 5000, 411));
-    sBackground.setPosition(-2000, 0);
+    sBackground.setPosition(-200000, -100);
+    sBackground.setScale(sf::Vector2f(100.0f, 2.0f));
 
-   /* //item
-    int x, y;
-    x = rand() % 1024 + 3;
-    y = rand() % 768 + 3;
-    sf::Texture item;
-    sf::Sprite itemsp;
-    item.loadFromFile("images/oil-item.png");
-    itemsp.setTexture(item);
-    itemsp.setScale(Vector2f(0.25f, 0.25f));
-  
  
-    //itemsp.setPosition(x, y);
-    if (itemsp.getGlobalBounds().intersects(mark.getGlobalBounds()))
-    {
-        oil_MAX = oil_MAX + 50;
-    }
-    */
     int distanceScore = 0;
     
     float playerX = 0;
@@ -265,7 +289,7 @@ int main()
     hp = hpMax;
     std::vector<Line> lines;
 
-    for (int i = 0; i < 1600; i++)
+    for (int i = 0; i < 100000; i++)
     {
         Line line;
         line.z = i * segL;
@@ -298,48 +322,75 @@ int main()
         }
         if (i > 800 && i % 20 == 0) 
         { 
-            line.spriteX = -1.2; line.sprite = object[1]; 
+            line.spriteX = -1.5; line.sprite = object[1]; 
         }
         if (i == 400) 
         { 
-            line.spriteX = -1.3; line.sprite = object[9];
+            line.spriteX = -1.6; line.sprite = object[9];
         }
         if (i > 750) line.y = sin(i / 30.0) * 1500;
-        /*
-        if (i > 150 && (i + 21) % 59 == 0)
-        {
-            lines[i].oilX = 0.5; lines[i].oilSp = object[3];
-        }
-        if (i > 150 && i % 59 == 0)
-        {
-            lines[i].oilX = -2.5; lines[i].oilSp = object[3];
-        }
-        if (i > 101 && (i - 21) % 49 == 0)
-        {
-            lines[i].oilX = 2.2; lines[i].oilSp = object[3];
-        }
-    */
-        //item
 
         
-
+        //item
+        //ขวด
+        if (i > 200 && (i + 30) % 1000 == 0)
+        {
+            //lines[i].oilX = 0.5; lines[i].oilSp = object[3];
+            line.spriteX =  -0.5;
+            line.sprite = object[3];
+        }
+        /*//หัวใจ
+        if (i > 200 && (i + 29) % 900 == 0)
+        {
+            //lines[i].oilX = 0.5; lines[i].oilSp = object[3];
+            line.spriteX = -0.2;
+            line.sprite = object[7];
+        }*/
+        //ที่กั้นยาว
+        if (i > 150 && i % 69 == 0)
+        {
+            //lines[i].oilX = -2.5; lines[i].oilSp = object[3];
+            line.spriteX = rand() % 2 - 0.4;
+            line.sprite = object[12];
+        }
+        //หิน
+        if (i > 101 && (i - 21) % 98 == 0)
+        {
+            //lines[i].oilX = 2.2; lines[i].oilSp = object[3];
+            line.spriteX = rand() % 2 - 0.9;
+            line.sprite = object[11];
+        }
+        if (i > 500 && (i - 21) % 199 == 0)
+        {
+            //lines[i].oilX = 2.2; lines[i].oilSp = object[3];
+            line.spriteX = rand() % 2 - 1.4;
+            line.sprite = object[8];
+        }
+        if (i > 1500 && (i - 21) % 399 == 0)
+        {
+            //lines[i].oilX = 2.2; lines[i].oilSp = object[3];
+            line.spriteX = rand() % 2 - 0.6;
+            line.sprite = object[10];
+        }
+      
+        /*
         if (i == 0) 
         { 
             line.spriteX = -0.5;
             line.sprite = object[3];//itemsp; 
-        }
-        if (object[3].getPosition().x == mark.getPosition().x && object[3].getPosition().y == mark.getPosition().y)
-        {
-            oil_MAX = oil_MAX + 1000;
-        }
+        }*/
+  
         /*if (itemsp.getGlobalBounds().intersects(mark.getGlobalBounds()) && i == 0)
         {
             oil_MAX = oil_MAX + 1000;
         }*/
-      
+        if (i >= 100000)
+        {
+            i = 0;
+        }
         lines.push_back(line);
     }
-
+    
     int N = lines.size();
 
     //oil bar
@@ -380,94 +431,123 @@ int main()
             if (e.type == Event::KeyReleased)
             {
                 isJumping == false;
-                switch (e.key.code )
+                if (isMenu == true)
                 {
-                case::sf::Keyboard::W:
-                    menu.MoveUp();
-                    break;
-                case::sf::Keyboard::S:
-                    menu.MoveDown();
-                    break;
-                case::sf::Keyboard::Return:
-                    switch (menu.GetPressedItem())
+                    switch (e.key.code)
                     {
-                    case 0:
-                        std::cout << "Start" << "\n";
-                        isGameStarted = true;
+                    case::sf::Keyboard::W:
+                        menu.MoveUp();
                         break;
-                        
+                    case::sf::Keyboard::S:
+                        menu.MoveDown();
                         break;
-                    case 1:
-                        std::cout << "How to Play" << "\n";
+                   
+                    case::sf::Keyboard::Return:
+                        switch (menu.GetPressedItem())
+                        {
+                        case 0:
+                            std::cout << "Start" << "\n";
+                            isGameStarted = true;
+                            isAlive = true;
+                            break;
+
+                            break;
+                        case 1:
+                            std::cout << "How to Play" << "\n";
+                            isHTP = true;
+                          
+                            break;
+                        case 2:
+                            std::cout << "Scoreboard" << "\n";
+
+                            break;
+                        case 3:
+                            app.close();
+                            break;
+                        }case::Keyboard::M:
+                         isMenu = true;
                         break;
-                    case 2:
-                        std::cout << "Scoreboard" << "\n";
-                      
-                        break;
-                    case 3:
-                        app.close();
-                        break;
+
                     }
-                    break;
-                    
-                }  
+                     
+                }
+             
                 //pause
                 
             }
         }
         //------PLAYER ANIMATION-----------//
         if (isAlive)
+        {
             deltatime += clockForPlayer.restart().asSeconds();
-        //---Get Current Frame----//
-        int animFrame = static_cast<int>((deltatime / animDuration) * framesNum/2) % (framesNum);
+            //---Get Current Frame----//
+            int animFrame = static_cast<int>((deltatime / animDuration) * framesNum / 2) % (framesNum);
 
-        //---Set Sprite Rectangle Based on Frame---//
-        player.setTextureRect(IntRect(animFrame* playerSize.x, 0, playerSize.x, playerSize.y));
+            //---Set Sprite Rectangle Based on Frame---//
+            player.setTextureRect(IntRect(animFrame * playerSize.x, 0, playerSize.x, playerSize.y));
 
-        if (Keyboard::isKeyPressed(Keyboard::Right))
-        {
-            //playerX += 0.1;
-            if (collider.getPosition().x < colliderX + 300)
+            if (Keyboard::isKeyPressed(Keyboard::Right))
             {
-                collider.move(20, 0); player.move(20, 0);
+                //playerX += 0.1;
+                if (collider.getPosition().x < colliderX + 300)
+                {
+                    collider.move(20, 0); player.move(20, 0);
+                }
             }
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Left))
-        {
-            //playerX -= 0.1;
-            if (collider.getPosition().x > colliderX - 300)
+            if (Keyboard::isKeyPressed(Keyboard::Left))
             {
-                collider.move(-20, 0); player.move(-20, 0);
+                //playerX -= 0.1;
+                if (collider.getPosition().x > colliderX - 300)
+                {
+                    collider.move(-20, 0); player.move(-20, 0);
+                }
             }
-        }
-
-        if (player.getPosition().y < groundHeight && collider.getPosition().y < groundHeight && isJumping == true) {
-            player.move(0, gravity);
-            collider.move(0, gravity);
-        }
-        /*if (Keyboard::isKeyPressed(Keyboard::Down)) 
-        { 
-            distanceScore = distanceScore - 2;
-            speed = -200;
-        }*/
-
-        if (Keyboard::isKeyPressed(Keyboard::Tab))
-        {
-            speed *= 3;
-            oil_MAX = oil_MAX - 3;
-            distanceScore = distanceScore + 3;
-        }
-        if (Keyboard::isKeyPressed(Keyboard::Space))
-        {
-            if (collider.getPosition().y >= (height / 2 + 100)) {
-                isJumping = true;
-                collider.move(0, -moveSpeed);
-                player.move(0, -moveSpeed);
-
+            if (Keyboard::isKeyPressed(Keyboard::O))
+            {
+                isAlive = false;
+                speed = 0;
+                distanceScore = distanceScore - 1;
+                oil_MAX = oil_MAX + 1;
+                if (Keyboard::isKeyPressed(Keyboard::Space))
+                {
+                    H += 100;
+                    isJumping == false;
+                    oil_MAX = oil_MAX + 5;
+                    // distanceScore = distanceScore - 1;
+                }
+                isGameStarted = false;
             }
-            //H += 100;
-            oil_MAX = oil_MAX - 10;
-            distanceScore = distanceScore + 1.5;
+            if (player.getPosition().y < groundHeight && collider.getPosition().y < groundHeight && isJumping == true) {
+                player.move(0, gravity);
+                collider.move(0, gravity);
+            }
+            /*if (Keyboard::isKeyPressed(Keyboard::Down))
+            {
+                distanceScore = distanceScore - 2;
+                speed = -200;
+            }*/
+            
+            if (Keyboard::isKeyPressed(Keyboard::Tab))
+            {
+                speed *= 3;
+                oil_MAX = oil_MAX - 3;
+                distanceScore = distanceScore + 3;
+            }
+            
+            if (Keyboard::isKeyPressed(Keyboard::Space))
+            {
+                playJ.play();
+                if (collider.getPosition().y >= (height / 2 + 100)) {
+                    isJumping = true;
+                    collider.move(0, -moveSpeed);
+                    player.move(0, -moveSpeed);
+
+                }
+                //H += 100;
+                oil_MAX = oil_MAX - rand() % 5 - 5;
+                //distanceScore = distanceScore + 1.5;
+                
+            }
         }
         if (H > 1500 && !(H < 1500))
         {
@@ -478,22 +558,34 @@ int main()
             isAlive = false;
             oil_MAX = 0;
             speed = 0;
-            distanceScore = distanceScore-1;
-            if (Keyboard::isKeyPressed(Keyboard::Tab))
-            {
-                speed *= 3;
-                oil_MAX = oil_MAX - 3;
-                distanceScore = distanceScore - 3;
-            }
+            distanceScore = distanceScore - 1;
+       
             if (Keyboard::isKeyPressed(Keyboard::Space))
             {
                 H += 100;
-                jump == false;
-                oil_MAX = oil_MAX - 5;
-                distanceScore = distanceScore -1;
+                isJumping == false;
+                oil_MAX = oil_MAX + 5;
+               // distanceScore = distanceScore - 1;
             }
+            isGameStarted = false;
         } 
-
+            //hp
+        if (hpMax <= 0)
+        {
+            hpMax = 0;
+            isAlive = false;
+            oil_MAX = oil_MAX +1 ;
+            speed = 0;
+            distanceScore = distanceScore - 1;
+            if (Keyboard::isKeyPressed(Keyboard::Space))
+            {
+                H += 100;
+                isJumping == false;
+                oil_MAX = oil_MAX + 5;
+                //distanceScore = distanceScore - 1;
+            }
+            isGameStarted = false;
+        }
         pos += speed;
         while (pos >= N * segL) pos -= N * segL;
         while (pos < 0) pos += N * segL;
@@ -504,15 +596,61 @@ int main()
         int camH = lines[startPos].y + H;
         if (speed > 0) sBackground.move(-lines[startPos].curve * 2, 0);
         if (speed < 0) sBackground.move(lines[startPos].curve * 2, 0);
+        /*
+        if (lines[startPos + 5].getOilBounds().intersects(collider.getGlobalBounds()))
+        {
+            //oil_MAX = oil_MAX + 1000;
+            //playCoin.play();
+        }
+        */
+      
+        
+        /*//-------DRAWING OBSTACLES AND COINS----------//
+        for (int n = startPos + 300; n > startPos; n--)
+        {
+            lines[n % N].drawSprite(app);
+            lines[n % N].drawOil(app);
+        }*/
 
+        if (isAlive)
+        {
+            if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX == -0.5))
+            {
+                oil_MAX = oil_MAX + 800;
+                hpMax = hpMax + 1;
+                botSound.play();
+            }
+            /*if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.2))
+            {
+                hpMax = hpMax + 20;
+
+                healSound.play();
+            }*/
+            /*if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.7 ))
+            {
+                hpMax = hpMax - 1;
+
+                collideSound.play();
+            }
+            if (lines[startPos + 10].getObstacleBounds().intersects(collider.getGlobalBounds()) && (lines[startPos].spriteX = -0.4))
+            {
+                hpMax = hpMax - 1;
+
+                collideSound.play();
+            }*/
+            if (lines[startPos +100].getObstacleBounds().intersects(collider.getGlobalBounds()) )
+            {
+                hpMax = hpMax - 1;
+
+                collideSound.play();
+            }
+        }
+            
+        
+        
         int maxy = height;
         float x = 0, dx = 0;
-        //hp
-        if (hpMax <= 0)
-        {
-            hpMax = 0;
-            isAlive = false;
-        }
+      
             
         if (hpMax >= 100)
             hpMax = 100;
@@ -560,8 +698,9 @@ int main()
       
 
         switch (isGameStarted)
-        {case 0:   
-            distanceScore = 0;
+        {case 0: 
+            if(isMenu)
+            { distanceScore = 0;
             oil_MAX = 5100;
             hpMax = 100;
             app.clear();
@@ -570,13 +709,23 @@ int main()
 
             app.display();
 
+            app.clear();      
+            if (isHTP == true)
+        {
+            
             app.clear();
+            htp.draw(app);
+            app.display();
+            app.clear();
+            isMenu = false;
+        } }
+            
+       
             break;
         case 1:
 
-            //app.draw(itemsp);
             
-            app.draw(mark); 
+            //app.draw(mark); 
             app.draw(player);
             app.draw(distance);
 
@@ -584,8 +733,21 @@ int main()
 
             app.clear();
             break;
+     
         }
-  
+        
+        if (isHTP == true)
+        {
+            switch (e.key.code)
+            {
+            case::sf::Keyboard::M:
+                isMenu = true;
+                isHTP = false;
+                break;
+            default:
+                break;
+            }
+        }
       
     }
  

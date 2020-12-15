@@ -17,7 +17,7 @@ public:
 	~leaderBoard();
 
 	void fistWriteText();
-	void writeText(string str, int score);
+	void writeText(string str, int distance);
 	void Draw(RenderWindow& window);
 
 private:

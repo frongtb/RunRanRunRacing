@@ -12,7 +12,7 @@
 #include <sstream>
 #include <vector>
 
-#define MAX_NUM_OF_ITEM 4
+#define MAX_NUM_OF_ITEM 1
 class HowToPlay
 {
 public:
@@ -22,9 +22,6 @@ public:
 	void draw(sf::RenderWindow& app);
 
 private:
-	int selectedItemIndex;
-	sf::Font font;
-	sf::Text mainmenu[MAX_NUM_OF_ITEM];
 	sf::Texture menu;
 	sf::Sprite menusp;
 
