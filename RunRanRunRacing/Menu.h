@@ -12,13 +12,23 @@
 #include <sstream>
 #include <vector>
 
+#include"Plane.h"
+
 #define MAX_NUM_OF_ITEM 4
 class Menu
 {
 public:
 	Menu(float width,float height);
-	virtual ~Menu();
+	~Menu();
 
+	Plane* leaderboard;
+	sf::Text enter;
+	sf::RectangleShape textBox;
+	sf::RectangleShape textPlane;
+	sf::RectangleShape textCursor;
+
+	sf::Vector2f windowSize;
+	sf::Text playerText;
 	void draw(sf::RenderWindow& app);
 	void MoveUp();
 	void MoveDown();

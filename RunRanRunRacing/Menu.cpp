@@ -6,6 +6,34 @@ Menu::Menu(float width, float height)
 	{
 		std::cout << "game failed to load font menu " << "\n";
 	}
+	sf::Vector2f posMid = sf::Vector2f(width / 2 - this->playerText.getGlobalBounds().width / 2, height / 2 - this->playerText.getGlobalBounds().height / 2);
+
+	this->leaderboard = new Plane(width / 2 - 200.f, height / 2 - 200.f, 400.f, 400.f, &this->font, 48, 48);
+
+
+	this->enter.setString("Press Enter to Start");
+	this->enter.setFont(this->font);
+	this->enter.setCharacterSize(48);
+	this->enter.setOutlineColor(sf::Color::Black);
+	this->enter.setOutlineThickness(1.f);
+	this->enter.setFillColor(sf::Color::Green);
+	this->enter.setPosition(width / 2 - this->enter.getGlobalBounds().width / 2 - 40.f, height / 2 - 100.f);
+
+	this->windowSize = sf::Vector2f(width, height);
+
+	this->playerText.setCharacterSize(48);
+	this->playerText.setOutlineColor(sf::Color::Black);
+	this->playerText.setOutlineThickness(1.f);
+	this->playerText.setFillColor(sf::Color::White);
+	this->playerText.setFont(this->font);
+	this->playerText.setPosition(posMid.x - 180.f + 2.f - 50.f + 5.f, posMid.y);
+
+	this->textBox.setSize(sf::Vector2f(360.f + 20.f, playerText.getGlobalBounds().height + 50.f));
+	this->textBox.setOutlineThickness(2.f);
+	this->textBox.setOutlineColor(sf::Color::Black);
+	//	this->textCursor.setFillColor(sf::Color::Black);
+
+	this->textBox.setPosition(sf::Vector2f(posMid.x - 180.f - 50.f - 10.f + 5.f, posMid.y + 10.f));
 	mainmenu[0].setFont(font);
 	mainmenu[0].setFillColor(sf::Color::Red);
 	mainmenu[0].setString("Play");

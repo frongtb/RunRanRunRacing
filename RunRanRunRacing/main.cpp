@@ -25,7 +25,9 @@ sf::RectangleShape playerOILBar;
 sf::RectangleShape playerOILBarBack;
 sf::RectangleShape playerHpBar;
 sf::RectangleShape playerHpBarBack;
-
+sf::RectangleShape shape;
+sf::Font* font;
+sf::Text content;
 /*sf::Sprite coin;
 sf::FloatRect coin_texture;
 sf::FloatRect getCoinBounds()
@@ -46,8 +48,9 @@ bool isHTP = false;
 bool isMenu = true;
 bool isHS = false;
 void updateAndSaveScore();
+void initContent(unsigned content_character_size);
 void generateObstacles(sf::Sprite[]);
-
+void render(sf::RenderTarget* target);
 void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, int w2)
 {
 
@@ -184,13 +187,28 @@ int main()
     bool isJumping = false;
     float moveSpeed = 300.0f;
 
+    sf::Text endText;
+    sf::Text scoreEndText;
+    sf::Text highscoretext;
+
+    highscoretext.setFont(font);
+    highscoretext.setCharacterSize(72);
+    highscoretext.setFillColor(sf::Color::White);
+    highscoretext.setPosition(app.getSize().x/2  - scoreEndText.getGlobalBounds().width / 2, 450.f);
+    highscoretext.setOutlineColor(sf::Color::Black);
+    highscoretext.setOutlineThickness(1.f);
+
+   
+
+
+
     distance.setFont(font);
     distance.setCharacterSize(18);
     distance.setFillColor(sf::Color::Black);
     distance.setString("X");
     distance.setPosition(25.f, 25.f);
 
-
+    
 
     //----CREATE COLLIDER-------//
     CircleShape collider(30);
@@ -458,6 +476,7 @@ int main()
                             break;
                         case 2:
                             std::cout << "Scoreboard" << "\n";
+                            
                             isHS = true;
 
                             break;
@@ -678,8 +697,8 @@ int main()
         for (int n = startPos + 300; n > startPos; n--)
             lines[n % N].drawSprite(app);
 
-
-
+        
+       
         switch (isGameStarted)
         {
         case 0:
@@ -706,12 +725,25 @@ int main()
                 }
                 if (isHS == true)
                 {
-
+                    
                     app.clear();
+                    //app.draw(menu.playerText);
+                    //app.draw(endText);
+                    //app.draw(highscoretext);
+                    //app.draw(shape);
+                    //app.draw(content);
+                    
+                    //app.draw(content);
+                   // app.draw(scoreEndText);
+                    //render(&app);
+                   
                     app.draw(hsBackground);
-                    app.display();
-                    app.clear();
+                    //app.clear();
                     isMenu = false;
+                    menu.leaderboard->render(&app);
+                    app.display();
+                    
+                    
                 }
             }
 
@@ -756,6 +788,7 @@ int main()
             }
         }
     }
+    
 
     return 0;
 }
@@ -803,14 +836,78 @@ void updateAndSaveScore()
     }
 
     std::fstream ofs;
+    ofs.open("score/score.txt", std::ios::out | std::ios::trunc);
 
-    ofs.open("images/scores.txt", std::ios::out | std::ios::trunc);
+    for (auto nameWithScore : namesWithScore) {
+        std::cout << "write " << std::endl << nameWithScore.score << std::endl;
 
-    for (auto nameWithScore : namesWithScore)
-    {
-        ofs << std::to_string(nameWithScore.score) + "\n";
+        ofs <<  "\t" + std::to_string(nameWithScore.score) + "\n";
     }
 
+    
     ofs.close();
+}
+
+
+
+
+void initContent(unsigned content_character_size)
+{
+    std::ifstream ifs("images/scores.txt");
+
+    if (ifs.is_open())
+    {
+       
+        std::string playerScore = "";
+
+        std::string content1 = "";
+        int i = 1;
+        while (ifs >> playerScore)
+        {
+            content1 += ("No." + std::to_string(i) + " "  + " - " + playerScore + "\n");
+            ++i;
+        }
+
+
+        content.setFont(*font);
+        content.setString(content1);
+        content.setCharacterSize(content_character_size);
+        content.setFillColor(sf::Color(250, 250, 250, 250));
+        content.setPosition(
+        shape.getPosition().x + (shape.getGlobalBounds().width / 2.f) - content.getGlobalBounds().width / 2.f,
+        shape.getPosition().y + (shape.getGlobalBounds().height / 2.f) - content.getGlobalBounds().height / 2.f + 30.f
+        );
+        content.setOutlineThickness(1.f);
+        content.setOutlineColor(sf::Color::Black);
+
+    }
+
+    ifs.close();
+
+    
+
+}
+
+void Plane(float x, float y, float width, float height, sf::Font* font,
+    unsigned header_character_size, unsigned content_character_size)
+{
+
+    font = font;
+    shape.setPosition(sf::Vector2f(x, y));
+    shape.setSize(sf::Vector2f(width, height));
+    shape.setFillColor(sf::Color(70, 70, 70, 200));
+    shape.setOutlineThickness(1.f);
+    shape.setOutlineColor(sf::Color::Black);
+
+    
+    initContent(content_character_size);
+}
+
+
+void render(sf::RenderTarget* target)
+{
+    target->draw(shape);
+    //target->draw(header);
+    target->draw(content);
 }
 
