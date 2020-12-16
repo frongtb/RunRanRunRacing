@@ -18,18 +18,18 @@ void Plane::initHeader(unsigned header_character_size)
 
 void Plane::initContent(unsigned content_character_size)
 {
-	std::ifstream ifs("score/score.txt");
+	std::ifstream ifs("images/scores.txt");
 
 	if (ifs.is_open())
 	{
-		std::string playerName = "";
+		
 		std::string playerScore = "";
 
 		std::string content = "";
 		int i = 1;
-		while (ifs >> playerName >> playerScore)
+		while (ifs >> playerScore)
 		{
-			content += (playerName + " - " + playerScore + "\n");
+			content += ( playerScore + "\n");
 			++i;
 		}
 		
@@ -39,9 +39,9 @@ void Plane::initContent(unsigned content_character_size)
 		this->content.setFillColor(sf::Color::Green);
 		this->content.setOutlineColor(sf::Color::Black);
 		this->content.setOutlineThickness(1.f);
-		this->content.setPosition(
-			this->shape.getPosition().x + (this->shape.getGlobalBounds().width / 2.f) - this->content.getGlobalBounds().width / 2.f,
-			this->shape.getPosition().y + (this->shape.getGlobalBounds().height / 2.f) - this->content.getGlobalBounds().height / 2.f + 30.f);
+		this->content.setPosition(625,220
+			/*this->shape.getPosition().x + (this->shape.getGlobalBounds().width / 2.f) - this->content.getGlobalBounds().width / 1.5f,
+			this->shape.getPosition().y + (this->shape.getGlobalBounds().height / 2.f) - this->content.getGlobalBounds().height / 2.f + 30.f*/);
 		
 		
 	}
@@ -71,6 +71,6 @@ Plane::~Plane()
 void Plane::render(sf::RenderTarget* target)
 {
 	//target->draw(this->shape);
-	target->draw(this->header);
+	//target->draw(this->header);
 	target->draw(this->content);
 }

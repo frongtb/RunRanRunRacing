@@ -149,7 +149,7 @@ struct Line
 int main()
 {
 
-    RenderWindow app(VideoMode(width, height), "Run Ran Run Racing!");
+    RenderWindow app(VideoMode(width, height), "Run Ran Run Racing!", sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
     app.setFramerateLimit(60);
 
     //menu
